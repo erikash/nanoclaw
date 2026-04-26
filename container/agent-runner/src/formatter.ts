@@ -227,10 +227,14 @@ function formatAttachments(attachments: any[] | undefined): string {
     const type = a.type || 'file';
     const localPath = a.localPath ? `/workspace/${a.localPath}` : '';
     const url = a.url || '';
+    const transcript = typeof a.transcript === 'string' && a.transcript.length > 0 ? a.transcript : null;
+    const transcriptSuffix = transcript ? `, transcript: "${escapeXml(transcript)}"` : '';
     if (localPath) {
-      return `[${type}: ${escapeXml(name)} — saved to ${escapeXml(localPath)}]`;
+      return `[${type}: ${escapeXml(name)} — saved to ${escapeXml(localPath)}${transcriptSuffix}]`;
     }
-    return url ? `[${type}: ${escapeXml(name)} (${escapeXml(url)})]` : `[${type}: ${escapeXml(name)}]`;
+    return url
+      ? `[${type}: ${escapeXml(name)} (${escapeXml(url)})${transcriptSuffix}]`
+      : `[${type}: ${escapeXml(name)}${transcriptSuffix}]`;
   });
   return '\n' + parts.join('\n');
 }

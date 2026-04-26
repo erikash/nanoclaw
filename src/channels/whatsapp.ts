@@ -35,6 +35,7 @@ import type { GroupMetadata, WAMessageKey, WAMessage, WASocket } from '@whiskeys
 import { ASSISTANT_HAS_OWN_NUMBER, ASSISTANT_NAME, DATA_DIR } from '../config.js';
 import { readEnvFile } from '../env.js';
 import { log } from '../log.js';
+import { transcribeAudio } from '../transcribe.js';
 import { registerChannelAdapter } from './channel-registry.js';
 import { normalizeOptions, type NormalizedOption } from './ask-question.js';
 import type { ChannelAdapter, ChannelSetup, ConversationInfo, InboundMessage, OutboundMessage } from './adapter.js';
@@ -294,14 +295,14 @@ registerChannelAdapter('whatsapp', {
     async function downloadInboundMedia(
       msg: WAMessage,
       normalized: any,
-    ): Promise<Array<{ type: string; name: string; localPath: string }>> {
+    ): Promise<Array<{ type: string; name: string; localPath: string; transcript?: string }>> {
       const mediaTypes: Array<{ key: string; type: string; ext: string }> = [
         { key: 'imageMessage', type: 'image', ext: '.jpg' },
         { key: 'videoMessage', type: 'video', ext: '.mp4' },
         { key: 'audioMessage', type: 'audio', ext: '.ogg' },
         { key: 'documentMessage', type: 'document', ext: '' },
       ];
-      const results: Array<{ type: string; name: string; localPath: string }> = [];
+      const results: Array<{ type: string; name: string; localPath: string; transcript?: string }> = [];
       for (const { key, type, ext } of mediaTypes) {
         if (!normalized[key]) continue;
         try {
@@ -312,8 +313,17 @@ registerChannelAdapter('whatsapp', {
           fs.mkdirSync(attachDir, { recursive: true });
           const filePath = path.join(attachDir, filename);
           fs.writeFileSync(filePath, buffer);
-          results.push({ type, name: filename, localPath: `attachments/${filename}` });
-          log.info('Media downloaded', { type, filename });
+          const entry: { type: string; name: string; localPath: string; transcript?: string } = {
+            type,
+            name: filename,
+            localPath: `attachments/${filename}`,
+          };
+          if (type === 'audio') {
+            const transcript = await transcribeAudio(filePath);
+            if (transcript) entry.transcript = transcript;
+          }
+          results.push(entry);
+          log.info('Media downloaded', { type, filename, transcribed: !!entry.transcript });
         } catch (err) {
           log.warn('Failed to download media', { type, err });
         }
