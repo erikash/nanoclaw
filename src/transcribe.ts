@@ -8,7 +8,12 @@ import { log } from './log.js';
 
 const execFileP = promisify(execFile);
 
-const envCfg = readEnvFile(['NANOCLAW_WHISPER_BIN', 'NANOCLAW_WHISPER_MODEL', 'NANOCLAW_WHISPER_LANG', 'NANOCLAW_WHISPER_TIMEOUT_MS']);
+const envCfg = readEnvFile([
+  'NANOCLAW_WHISPER_BIN',
+  'NANOCLAW_WHISPER_MODEL',
+  'NANOCLAW_WHISPER_LANG',
+  'NANOCLAW_WHISPER_TIMEOUT_MS',
+]);
 const WHISPER_BIN = process.env.NANOCLAW_WHISPER_BIN || envCfg.NANOCLAW_WHISPER_BIN;
 const WHISPER_MODEL = process.env.NANOCLAW_WHISPER_MODEL || envCfg.NANOCLAW_WHISPER_MODEL;
 const WHISPER_LANG = process.env.NANOCLAW_WHISPER_LANG || envCfg.NANOCLAW_WHISPER_LANG || 'auto';
@@ -37,10 +42,7 @@ export async function transcribeAudio(absolutePath: string): Promise<string | nu
     return null;
   }
 
-  const tmpWav = path.join(
-    path.dirname(absolutePath),
-    `.${path.basename(absolutePath)}.${process.pid}.wav`,
-  );
+  const tmpWav = path.join(path.dirname(absolutePath), `.${path.basename(absolutePath)}.${process.pid}.wav`);
   const startMs = Date.now();
   try {
     await execFileP(

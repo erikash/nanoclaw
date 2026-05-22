@@ -1,0 +1,6 @@
+Host moneyman-trigger
+  HostName 10.22.10.31
+  User erikash
+  UserKnownHostsFile /app/skills/moneyman/known_hosts
+  StrictHostKeyChecking yes
+  IdentityAgent /workspace/extra/ssh-agent.sock
